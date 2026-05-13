@@ -1,0 +1,149 @@
+Docker introduces a set of core concepts that are essential for working with containerized applications effectively. Understanding these terms helps in building, running, and managing containers efficiently.
+Terminology:=
+Image – A read-only template containing everything needed to run an application: code, runtime, libraries, and dependencies. Images are immutable and often built from a Dockerfile. They can be versioned using tags and stored in a registry.
+Dockerfile – A text file with instructions to build an image. It specifies the base image, dependencies, files to copy, environment variables, and commands to execute.
+Build – The process of creating an image from a Dockerfile and context using docker build.
+Container – A runtime instance of an image. Containers are lightweight, isolated environments sharing the host OS kernel. They can be started, stopped, and removed without affecting the image.
+Volumes – Persistent storage outside the container’s writable layer. Volumes separate your data from your application, so you can update or delete the app without losing your work, making them essential for databases and stateful apps.
+Registry & Repository – A registry stores and distributes images (e.g., Docker Hub, Azure Container Registry). A repository is a collection of related images, often differentiated by tags.
+Docker Desktop – A local development environment for building and running containers on Windows or macOS.
+
+1. Environment & Basic Commands: These commands provide meta-information about your Docker installation and help you navigate the interface.
+Command                                                                  Description
+docker version / docker -v	                Displays the current version of the Docker client and server engine.
+docker info	                                Shows system-wide information (e.g., number of containers, images, kernel version, storage driver).
+docker --help	                                  The manual. Use this to find help for any command.
+docker <command> --help	                         Shows specific documentation for a command (e.g., docker run --help).
+docker login	                                Authenticates you with a container registry (like Docker Hub) to pull/push private images.
+
+2.Image Management
+Images are the "blueprints" or "templates" for your containers. They are read-only and contain the application code and its dependencies.
+Command                                                                         	Description
+docker images	                                                Lists all images currently downloaded on your machine.
+docker pull <image-name>	                               Downloads an image from a registry (Docker Hub) to your local machine.
+docker rmi <image-id>	                                         Removes a specific image from your local machine.
+
+3.Container Lifecycle
+This is the most critical area. A container is a runnable instance of an image. Understanding the difference between run (creating/starting) and start (resuming) is key.
+Command                                                                     Description
+docker ps	                                 Lists running containers. (Use docker ps -a to see all containers, including stopped ones).
+docker run <image>	                        Creates a container and starts it. If the image isn't found locally, it automatically pulls it first.
+docker run -it <image>	                          Creates and starts a container, and drops you directly into the container's terminal.
+docker stop <container-id>	                     Gracefully stops a running container.
+docker start <container-id>	                    Starts a container that has been previously created but is currently stopped.
+
+4.System Maintenance
+These commands help you monitor resources and perform "garbage collection" to free up disk space.
+Command                                                                    Description
+docker stats	                                  Provides a real-time stream of CPU, memory, and network usage for running containers.
+docker system df	                       Displays disk usage (how much space your images, containers, and volumes are taking).
+docker system prune	                     Removes unused data. It cleans up stopped containers, unused networks, and dangling images.
+
+
+
+DOCKER Commands for Selenium (Steps)
+Selenium Page: https://github.com/SeleniumHQ/docker-selenium
+
+Display Docker version:
+docker –version
+
+Display containers are running in the machine:
+docker ps
+
+Pull the docker images from Docker Hub
+Selenium Standalone with Chrome
+docker pull selenium/standalone-chrome:latest
+
+Selenium Standalone with Firefox
+docker pull selenium/standalone-firefox:latest
+
+Displays images pulled into system
+docker images
+
+Creating container by using image:
+docker run -d -p 4444:4444 -v /dev/shm:/dev/shm selenium/standalone-chrome:latest
+
+docker run -d -p 4444:4444 -v /dev/shm:/dev/shm selenium/standalone-firefox:latest
+
+
+Why use Docker for Selenium Grid instead of a standard standalone setup?
+Answer: Docker provides environment isolation (no conflicting browser versions), easier scaling of nodes, consistent environment configurations, and rapid teardown/setup times.
+
+What is the difference between a Hub and a Node?
+Answer: The Hub is the central controller receiving requests from tests. Nodes are the workers that have browser drivers installed and perform the actual UI interactions.
+
+
+How does the Hub know which Node to send a request to?
+Answer: The Hub uses a matching algorithm based on capabilities (browser name, version, platform) requested by the test script.
+
+
+How do you handle scaling in modern environments?
+Answer: While docker-compose scale works, in CI/CD environments (like Kubernetes), we use HPA (Horizontal Pod Autoscalers) to scale based on CPU or memory usage. Note that in modern Docker Compose (V2), the syntax is docker compose up --scale chrome=3.
+
+
+How can you debug a test that is failing inside a Docker container?
+Answer: Use VNC to view the container’s desktop while the test is running, or check the container logs using docker logs <container_id>. Additionally, you can enable video recording in the node container to review the execution later.
+
+Selenium Grid on Docker:
+
+Architectural Components
+To understand the setup, it is essential to distinguish between the two primary roles in the Grid:
+
+The Hub: Acts as the central router and manager. It receives test requests from your script (via RemoteWebDriver) and assigns them to the appropriate node based on requested capabilities (e.g., Chrome, specific browser version).
+
+The Nodes: Act as the workers. These containers run the browser instances and execute the actual automated commands (click, type, navigate).
+
+Workflow & Lifecycle Management:
+The docker-compose file acts as the configuration manifest that defines how the Hub and Nodes communicate.
+
+Defining Services (docker-compose.yaml):
+This file describes your infrastructure. You define a hub service and one or more node services. They are connected via a dedicated Docker network defined within the YAML to ensure they can discover each other.
+
+Deployment (docker-compose up):
+Running docker-compose up pulls the necessary images from Docker Hub and initiates the containers.
+
+Pro-Tip: Use docker-compose up -d to run the grid in "detached mode." This prevents the containers from closing when you exit the terminal.
+
+Monitoring (/ui vs /grid/console):
+While older versions of Selenium used http://localhost:4444/grid/console, Selenium Grid 4 has updated the dashboard to http://localhost:4444/ui. This interface provides real-time visibility into active sessions, connected nodes, and queuing status.
+
+Dynamic Scaling (--scale):
+The command docker-compose up --scale chrome=3 allows you to spin up multiple instances of the Chrome node service instantly. This is vital for parallel testing, as each node can handle a defined number of concurrent browser sessions.
+
+Teardown (docker-compose down):
+This command is crucial for CI/CD pipelines. It not only stops the containers but also removes the network and associated resources, ensuring your host machine is cleaned up and ready for the next test run.
+
+What is a container?
+container is a standard unit of software that packages up code and all its dependencies so the application runs quickly and reliably from one computing environment to another. A Docker container image is a lightweight,  standalone, executable package of software that includes everything needed to run an application: code, runtime, system tools, system libraries, and settings.Container images become containers at runtime and in the case of Docker containers - images become containers when they run on Docker Engine. 
+
+
+What is a Docker image?
+A Docker Image is just a template used to build a running Docker Container.
+
+What is Docker Hub?
+DockerHub is the default Docker image registry where we can store our Docker images. You can think of it as GitHub for Git projects.
+
+
+Stopping and restarting a Docker Container:
+
+Then you can stop the running container with the docker stop command followed by the container ID:
+docker stop CONTAINER_ID
+If you need to, you can start the container again:
+docker start CONTAINER_ID
+In order to restart the container you can use the following:
+docker restart CONTAINER_ID
+
+
+Deleting a container:
+To delete the container, first make sure that the container is not running and then run:
+docker rm CONTAINER_ID
+If you would like to delete the container and the image all together, just run:
+docker rmi IMAGE_ID
+
+
+Pushing images to Docker Hub Now that we have our new image locally, let's see how we could push that new image to DockerHub. For that you would need a Docker Hub account first. Then once you have your account ready, in order to authenticate, run the following command:
+docker login
+Then push your image to the Docker Hub:
+docker push your-docker-user/name-of-image-here
+
+
